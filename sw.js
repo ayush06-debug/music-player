@@ -1,8 +1,7 @@
-const CACHE_NAME = 'vinylvault-v2';
+const CACHE_NAME = 'vinylvault-v3';
 const SHELL_FILES = [
   './',
-  './index.html',
-  './manifest.json'
+  './index.html'
 ];
 
 self.addEventListener('install', (event) => {
