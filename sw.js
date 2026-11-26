@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vinylvault-shell-v1';
+const CACHE_NAME = 'vinylvault-v2';
 const SHELL_FILES = [
   './',
   './index.html',
@@ -25,18 +25,22 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
-  // Only cache same-origin app files (music & Supabase calls are handled by the app + IndexedDB)
-  if (url.origin === self.location.origin) {
+  const isAppShell = url.origin === self.location.origin;
+  const isSupabaseMedia = url.hostname.endsWith('supabase.co') && url.pathname.includes('/storage/v1/object/');
+
+  if (isAppShell || isSupabaseMedia) {
     event.respondWith(
-      caches.match(event.request).then((cached) => {
+      caches.match(event.request, { ignoreSearch: true }).then((cached) => {
         if (cached) return cached;
         return fetch(event.request).then((response) => {
-          if (response && response.status === 200) {
+          if (response && (response.status === 200 || response.type === 'opaque')) {
             const copy = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
           }
           return response;
-        }).catch(() => caches.match('./index.html'));
+        }).catch(() => {
+          if (isAppShell) return caches.match('./index.html');
+        });
       })
     );
   }
