@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#121212" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>VinylVault Music</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <style>
     :root {
       --bg: #121212;
@@ -31,7 +31,6 @@
 
     .app-container { width: 100%; max-width: 430px; }
 
-    /* Header */
     header {
       display: flex;
       justify-content: space-between;
@@ -45,9 +44,9 @@
       border-radius: 999px;
       background: var(--surface-light);
       color: var(--accent-glow);
+      cursor: pointer;
     }
 
-    /* Rotating Vinyl Disc */
     .turntable {
       display: flex;
       flex-direction: column;
@@ -86,9 +85,7 @@
       animation-play-state: paused;
     }
 
-    .vinyl-disc.playing {
-      animation-play-state: running;
-    }
+    .vinyl-disc.playing { animation-play-state: running; }
 
     @keyframes spin {
       from { transform: rotate(0deg); }
@@ -114,12 +111,10 @@
       z-index: 3;
     }
 
-    /* Track Details */
     .track-info { text-align: center; width: 100%; margin-bottom: 16px; }
     .track-title { font-size: 1.15rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .track-artist { font-size: 0.88rem; color: var(--muted); margin-top: 4px; }
 
-    /* Progress Bar */
     .progress-wrap { width: 100%; margin-bottom: 18px; }
     input[type="range"] {
       width: 100%;
@@ -136,7 +131,6 @@
       margin-top: 6px;
     }
 
-    /* Controls */
     .controls {
       display: flex;
       align-items: center;
@@ -151,9 +145,7 @@
       cursor: pointer;
       padding: 10px;
       border-radius: 50%;
-      transition: transform 0.15s;
     }
-    .btn-ctrl:active { transform: scale(0.92); }
     .btn-play {
       width: 62px;
       height: 62px;
@@ -166,7 +158,6 @@
       box-shadow: 0 6px 18px rgba(15, 118, 110, 0.5);
     }
 
-    /* Upload Section */
     .upload-toggle {
       width: 100%;
       padding: 13px;
@@ -210,7 +201,6 @@
     }
     .btn-upload:disabled { opacity: 0.5; }
 
-    /* Playlist */
     .playlist-header {
       display: flex;
       justify-content: space-between;
@@ -259,10 +249,9 @@
   <div class="app-container">
     <header>
       <h1>VinylVault</h1>
-      <span id="netStatus" class="status-badge">Syncing...</span>
+      <span id="netStatus" class="status-badge" title="Tap for status details">Syncing...</span>
     </header>
 
-    <!-- Rotating Disc Player -->
     <div class="turntable">
       <div class="vinyl-wrapper">
         <div id="vinylDisc" class="vinyl-disc">
@@ -285,13 +274,12 @@
       </div>
 
       <div class="controls">
-        <button class="btn-ctrl" id="prevBtn" title="Previous">&#9198;</button>
-        <button class="btn-ctrl btn-play" id="playBtn" title="Play/Pause">&#9654;</button>
-        <button class="btn-ctrl" id="nextBtn" title="Next">&#9197;</button>
+        <button class="btn-ctrl" id="prevBtn">&#9198;</button>
+        <button class="btn-ctrl btn-play" id="playBtn">&#9654;</button>
+        <button class="btn-ctrl" id="nextBtn">&#9197;</button>
       </div>
     </div>
 
-    <!-- Upload Drawer -->
     <button class="upload-toggle" id="toggleUploadBtn">+ Upload New Song to Cloud</button>
     <div class="upload-box" id="uploadBox">
       <div class="field">
@@ -313,7 +301,6 @@
       <button class="btn-upload" id="uploadSubmitBtn">Upload & Save Forever</button>
     </div>
 
-    <!-- Song Library -->
     <div class="playlist-header">
       <span>Your Library</span>
       <span id="songCount">0 tracks</span>
@@ -324,22 +311,17 @@
   <audio id="audioPlayer" crossorigin="anonymous"></audio>
 
   <script>
-    // =========================================================================
-    // PASTE YOUR 2 SUPABASE KEYS HERE (Keep the single quotes around them!)
-    // =========================================================================
     const SUPABASE_URL = 'https://kwxuthrwdnpbemzszeix.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_MwVibZ5jqj0xnlQ1DCpuOA_BvI0I1HE';
-    // =========================================================================
-
-    const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const DEFAULT_COVER = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><rect width='200' height='200' fill='%230f766e'/><text x='50%' y='54%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='56' font-family='sans-serif'>&#9835;</text></svg>";
 
+    let dbClient = null;
+    let lastErrorMsg = 'No errors';
     let songs = [];
     let currentIndex = -1;
     let currentObjectUrl = null;
 
-    // Elements
     const audio = document.getElementById('audioPlayer');
     const vinylDisc = document.getElementById('vinylDisc');
     const albumArt = document.getElementById('albumArt');
@@ -347,4 +329,12 @@
     const trackArtist = document.getElementById('trackArtist');
     const playBtn = document.getElementById('playBtn');
     const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.get
+    const nextBtn = document.getElementById('nextBtn');
+    const seekBar = document.getElementById('seekBar');
+    const curTime = document.getElementById('curTime');
+    const durTime = document.getElementById('durTime');
+    const songListEl = document.getElementById('songList');
+    const songCountEl = document.getElementById('songCount');
+    const netStatus = document.getElementById('netStatus');
+
+    netStatus.onclick = () => alert('Status Details:\n' + lastErrorMsg);
